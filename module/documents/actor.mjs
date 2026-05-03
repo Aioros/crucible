@@ -2691,28 +2691,23 @@ export default class CrucibleActor extends Actor {
   async #updateSize(data, options) {
     if ( options._crucibleRelatedUpdate || (this.type === "group") ) return;
     const size = this.size;
+    if ( size === this._cachedResources?.priorSize ) return;
+    const dimensions = {width: size, height: size, depth: size};
 
     // Unlinked Token Actor
     if ( this.isToken ) {
-      const token = this.token;
-      if ( (token.width !== size) || (token.height !== size) ) {
-        await token.update({width: size, height: size}, {_crucibleRelatedUpdate: true});
-      }
+      await this.token.update(dimensions, {_crucibleRelatedUpdate: true});
       return;
     }
 
-    // Linked Actor
-    const pt = this.prototypeToken;
-    if ( (pt.width === size) && (pt.height === size) ) return;
-    await this.update({prototypeToken: {width: size, height: size}}, {_crucibleRelatedUpdate: true});
+    // Linked Actor prototype Token
+    await this.update({prototypeToken: dimensions}, {_crucibleRelatedUpdate: true});
 
     // Update placed Tokens
     const sceneUpdates = {};
     for ( const token of this.getDependentTokens() ) {
-      if ( (token.width !== size) || (token.height !== size) ) {
-        sceneUpdates[token.parent.id] ||= [];
-        sceneUpdates[token.parent.id].push({_id: token.id, width: size, height: size});
-      }
+      sceneUpdates[token.parent.id] ||= [];
+      sceneUpdates[token.parent.id].push({_id: token.id, ...dimensions});
     }
     for ( const [sceneId, updates] of Object.entries(sceneUpdates) ) {
       const scene = game.scenes.get(sceneId);
@@ -2810,6 +2805,7 @@ export default class CrucibleActor extends Actor {
     }
     this._cachedResources.wasIncapacitated = this.system.isIncapacitated;
     this._cachedResources.wasBroken = this.system.isBroken;
+    this._cachedResources.priorSize = this.size;
     return this._cachedResources;
   }
 
