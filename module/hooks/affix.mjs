@@ -139,10 +139,13 @@ HOOKS.reliable = {
 
 HOOKS.returning = {
   preActivateAction(item, action) {
+    if ( !action.tags.has("strike") ) return;
     const updates = action.selfUpdateEvent.actorUpdates.items;
     if ( !updates ) return;
-    const update = updates.find(u => (u._id === item.id) && u.system?.dropped);
-    if ( update ) delete update.system.dropped;
+    const update = updates.find(u => (u._id === item.id) && (u.system?.dropped === true));
+    if ( !update ) return;
+    if ( !item.system.dropped ) delete update.system.dropped;
+    if ( item.system.equipped ) delete update.system.equipped;
   }
 };
 
