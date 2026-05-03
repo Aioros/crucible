@@ -663,7 +663,7 @@ pages:
         <strong>Engaged</strong> with a number of creatures greater than its
         <strong>Engagement</strong> score it has the <strong>Flanked</strong>
         condition. The Flanked condition has multiple stages, and each stage of
-        Flanked contributes +1 Boon to attack rolls made against that
+        Flanked contributes +1 Boon to melee attack rolls made against that
         creature.</p><section class="formula"><p class="value">Flanked
         Stage</p><p class="equals">=</p><p class="equation">Number of Engaged
         Enemies<br />- Engagement Score<br />- Engagement Bonus from Adjacent
@@ -691,7 +691,7 @@ pages:
         condition when a creature is <strong>Flanked</strong> is automatically
         computed and added whenever a character moves into or out of
         <strong>Engagement</strong> with other adversaries. The Flanked effect
-        automatically applies the correct number of boons to attack rolls
+        automatically applies the correct number of boons to melee attack rolls
         against the Flanked creature.</p></section><h2
         class="divider">Disengagement</h2><p>When an opponent attempts to
         disengage from you in melee combat it becomes temporarily vulnerable,

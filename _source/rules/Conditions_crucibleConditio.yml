@@ -418,7 +418,7 @@ pages:
         number of creatures greater than its <strong>Engagement</strong> score,
         it has the <strong>Flanked</strong> condition. The Flanked condition has
         multiple integer stages, starting at Flanked 1, where each stage of
-        Flanked contributes <strong>+1 Boon</strong> to attack rolls made
+        Flanked contributes <strong>+1 Boon</strong> to melee attack rolls made
         against that creature.</p><p>While having more Engaged enemies increases
         your Flanked condition, having adjacent allies who are supporting you
         can nullify flanking. Allies contribute their own Engagement as a bonus
