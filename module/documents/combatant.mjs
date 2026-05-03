@@ -46,18 +46,6 @@ export default class CrucibleCombatant extends Combatant {
 
   /* -------------------------------------------- */
 
-  /**
-   * Get the maximum initiative values is eligible as a delay.
-   * @returns {number|null}
-   */
-  getDelayMaximum() {
-    const position = this.parent.turns.indexOf(this);
-    const nextCombatant = this.parent.turns.find((c, i) => (i > position) && c.initiative);
-    return nextCombatant ? nextCombatant.initiative - 1 : null;
-  }
-
-  /* -------------------------------------------- */
-
   /** @inheritDoc */
   _onCreate(data, options, userId) {
     super._onCreate(data, options, userId);

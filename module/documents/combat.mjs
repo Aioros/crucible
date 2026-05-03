@@ -35,6 +35,14 @@ export default class CrucibleCombat extends foundry.documents.Combat {
     const bValue = Number.isNumeric(b.initiative) ? b.initiative : -Infinity;
     if ( aValue !== bValue ) return bValue - aValue;
 
+    // Delayers act first at their target initiative.
+    // Among delayers, the originally-faster combatant goes first.
+    const round = a.parent?.round;
+    const aDelay = (a.actor?.flags.crucible?.delay?.round === round) ? a.actor.flags.crucible.delay : null;
+    const bDelay = (b.actor?.flags.crucible?.delay?.round === round) ? b.actor.flags.crucible.delay : null;
+    if ( !!aDelay !== !!bDelay ) return aDelay ? -1 : 1;
+    if ( aDelay && bDelay && (aDelay.from !== bDelay.from) ) return bDelay.from - aDelay.from;
+
     // Modifier second
     const aBonus = a.abilityBonus;
     const bBonus = b.abilityBonus;

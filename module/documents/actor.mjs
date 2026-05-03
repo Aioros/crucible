@@ -911,7 +911,7 @@ export default class CrucibleActor extends Actor {
   async delay(initiative, actorUpdates={}) {
     const combatant = this.combatant;
     if ( !combatant ) throw new Error(`Actor [${this.id}] does not have a single Combatant in the current Combat.`);
-    const maximum = combatant.getDelayMaximum();
+    const maximum = combatant.initiative - 1;
     if ( !initiative || !Number.isInteger(initiative) || !initiative.between(1, maximum) ) {
       throw new Error(`You may only delay to an initiative value between 1 and ${maximum}`);
     }

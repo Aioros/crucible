@@ -31,10 +31,16 @@ export default class CrucibleCombatChallenge extends foundry.abstract.TypeDataMo
   /*  Initiative and Turn Events                  */
   /* -------------------------------------------- */
 
+  /**
+   * Generate a new set of Initiative rolls for all Combatants at the beginning of a new Round.
+   * @param {Partial<CombatData>} data    Combat encounter data being modified
+   * @returns {Promise<void>}
+   */
   async preUpdateRoundInitiative(data) {
     data.turn = 0; // Force starting at the top of the round, ignoring defeated combatant adjustments
     data.combatants = [];
     const results = [];
+    const actorUpdates = [];
     for ( const c of this.parent.combatants ) {
       const roll = c.getInitiativeRoll();
       await roll.evaluate();
@@ -42,7 +48,9 @@ export default class CrucibleCombatChallenge extends foundry.abstract.TypeDataMo
       const r = c.clone({initiative: roll.total}, {keepId: true});
       r.roll = roll;
       results.push(r);
+      if ( c.actor?.flags.crucible?.delay ) actorUpdates.push({_id: c.actor.id, "flags.crucible.delay": _del});
     }
+    if ( actorUpdates.length ) await Actor.updateDocuments(actorUpdates);
     await this.postInitiativeMessage(data.round, results);
   }
 

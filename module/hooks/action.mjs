@@ -306,17 +306,16 @@ HOOKS.delay = {
       throw new Error(_loc("ACTION.WARNINGS.SPECIFIC.DELAY.AlreadyDelayed"));
     }
   },
-  // TODO refactor to roll()?
   async preActivate() {
-    const combatant = game.combat.getCombatantByActor(this.actor);
-    const maximum = combatant.getDelayMaximum();
+    const maximum = game.combat.combatant.initiative - 1;
+    const hint = await CONFIG.ux.TextEditor.enrichHTML(_loc("ACTION.DelayHint", {maximum}));
     const response = await foundry.applications.api.DialogV2.prompt({
       window: { title: "ACTION.DelayTitle" },
       content: `<form class="delay-turn" autocomplete="off">
             <div class="form-group">
                 <label>${_loc("ACTION.DelayLabel")}</label>
                 <input name="initiative" type="number" min="1" value="${maximum - 1}" max="${maximum}" step="1">
-                <p class="hint">${_loc("ACTION.DelayHint", {maximum})}</p>
+                <p class="hint">${hint}</p>
             </div>
         </form>`,
       ok: {

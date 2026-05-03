@@ -43,7 +43,7 @@
         "Name": "Defend"
       },
       "Delay": {
-        "Description": "You delay your action until a later point in the Combat round. Choose an Initiative between 1 and the Initiative value of the combatant after you. You will act at this new Initiative value. You may only delay your turn once per round.",
+        "Description": "You delay your action until a later point in the Combat round. Choose an Initiative between 1 and one less than your current Initiative. You will act at this new Initiative value, and if other combatants share that value you will act before them. You may only delay your turn once per round.",
         "Name": "Delay"
       },
       "Investiture": {
@@ -478,7 +478,7 @@
     "ChooseWeaponHint": "You may choose which weapon to use for this Action.",
     "Condition": "Condition",
     "Confirmed": "Confirmed",
-    "DelayHint": "Choose an initiative value between 1 and {maximum} when you wish to act.",
+    "DelayHint": "Choose an Initiative between 1 and {maximum} at which to act. See @UUID[Compendium.crucible.rules.JournalEntry.QhZgmBrdLAGwYy5c.JournalEntryPage.DPrsFbPo3tD7TJ5g]{Initiative and Turn Order} for how delayed Initiative interacts with tiebreaking.",
     "DelayLabel": "Delayed Initiative",
     "DelayTitle": "Delay Turn",
     "DurationRounds": "{value}R",
