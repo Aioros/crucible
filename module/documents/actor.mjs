@@ -2167,7 +2167,7 @@ export default class CrucibleActor extends Actor {
     action.usage.actorUpdates ||= {};
     action.usage.actorUpdates.items ||= [];
     const update = {_id: item.id, system: {dropped: false, equipped: true}};
-    if ( slot !== undefined ) update.slot = slot;
+    if ( slot !== undefined ) update.system.slot = slot;
     else update.system.equipped = false;
     action.usage.actorUpdates.items.push(update);
     return action;
