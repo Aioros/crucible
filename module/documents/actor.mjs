@@ -233,6 +233,14 @@ export default class CrucibleActor extends Actor {
    */
   _cachedResources = {};
 
+  /**
+   * Snapshot taken after the most recent `TokenDocument#prepareDerivedData` pass, recording whether token-affecting
+   * hooks are present.
+   * @type {boolean}
+   * @internal
+   */
+  _hadTokenHooks = false;
+
   /* -------------------------------------------- */
   /*  Data Preparation                            */
   /* -------------------------------------------- */
