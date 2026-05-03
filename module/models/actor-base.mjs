@@ -1099,6 +1099,38 @@ export default class CrucibleBaseActor extends foundry.abstract.TypeDataModel {
   }
 
   /* -------------------------------------------- */
+  /*  Resource Allocation                         */
+  /* -------------------------------------------- */
+
+  /**
+   * Allocate an integer resource change against this actor, constraining it using the actor's current resource pools
+   * and an accumulating record of ongoing allocated changes.
+   * A negative `amount` is damage, a positive `amount` is restoration.
+   * @param {number} amount                         The magnitude of change; negative for damage, positive for
+   *                                                restoration
+   * @param {string} resource                       The primary resource being modified
+   * @param {Record<string, number>} allocation     Accumulating allocation over the course of multiple events
+   * @returns {Record<string, number>}              The diff of resource changes applied by this allocation call
+   */
+  allocateResourceChange(amount, resource, allocation) {
+    const r = this.resources[resource];
+    if ( !r || !amount ) return {};
+    const current = r.value + (allocation[resource] || 0);
+    let delta;
+    if ( amount < 0 ) {
+      const loss = Math.min(Math.max(current, 0), -amount);
+      if ( loss <= 0 ) return {};
+      delta = -loss;
+    } else {
+      const gain = Math.min(amount, Math.max(r.max - current, 0));
+      if ( gain <= 0 ) return {};
+      delta = gain;
+    }
+    allocation[resource] = (allocation[resource] || 0) + delta;
+    return {[resource]: delta};
+  }
+
+  /* -------------------------------------------- */
   /*  Actor Hooks                                 */
   /* -------------------------------------------- */
 

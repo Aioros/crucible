@@ -1751,17 +1751,34 @@ export default class CrucibleAction extends foundry.abstract.DataModel {
   /**
    * Finalize the event stream by recording per-roll resource deltas and critical flags.
    * Called after all postActivate hooks have had a chance to modify roll data.
+   * Allocate resource changes using {@link CrucibleBaseActor#allocateResourceChange}, constraining damage to the
+   * state of resource pools, allowing for accurate reversal.
    */
   #finalizeEvents() {
+    const allocations = new Map();
     for ( const event of this.events ) {
       if ( !event.roll ) continue;
+      if ( event.roll.isCriticalSuccess ) event.isCriticalSuccess = true;
+      else if ( event.roll.isCriticalFailure ) event.isCriticalFailure = true;
+
+      // Allocate resource changes
       const damage = event.roll.data.damage || {};
       const resource = damage.resource ?? "health";
       const cfg = SYSTEM.RESOURCES[resource];
-      const delta = (damage.total ?? 0) * (damage.restoration ? 1 : -1) * (cfg.type === "reserve" ? -1 : 1);
-      if ( delta ) event.resources.push({resource, delta});
-      if ( event.roll.isCriticalSuccess ) event.isCriticalSuccess = true;
-      else if ( event.roll.isCriticalFailure ) event.isCriticalFailure = true;
+      const amount = (damage.total ?? 0) * (damage.restoration ? 1 : -1) * (cfg.type === "reserve" ? -1 : 1);
+      if ( !amount ) continue;
+
+      // Allocate without specific system target (in theory should not happen?)
+      if ( !event.target?.system ) {
+        event.resources.push({resource, delta: amount});
+        continue;
+      }
+
+      // Allocate to specific Actor per system type
+      if ( !allocations.has(event.target) ) allocations.set(event.target, {});
+      const allocation = allocations.get(event.target);
+      const deltas = event.target.system.allocateResourceChange(amount, resource, allocation);
+      for ( const [r, delta] of Object.entries(deltas) ) event.resources.push({resource: r, delta});
     }
   }
 
