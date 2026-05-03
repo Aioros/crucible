@@ -5,13 +5,12 @@ system:
   nodes: []
   description: >-
     <p>This adversary is a group of many identical creatures that operate as a
-    single swarming throng of foes.</p><ul><li><p><strong>Health
-    </strong>scaling is increased.</p></li><li><p><strong>Defense</strong>
-    against <strong>Area Attacks</strong>
-    decreased.</p></li><li><p><strong>Defense</strong> against <strong>Single
-    Target Attacks</strong> increased.</p></li><li><p><strong>Size </strong>is
-    increased based on Health, as <strong>Health</strong> decreases, so does
-    <strong>Size</strong>.</p></li></ul><p></p>
+    single swarming throng of foes.</p><ul><li><p>Maximum
+    <strong>Health</strong> is doubled.</p></li><li><p>Against any single-target
+    source of damage, the swarm gains additional <strong>Resistance</strong>
+    equal to its <strong>Toughness</strong>.</p></li><li><p>The swarm's
+    <strong>Size</strong> decreases as its Health is depleted until reaching a
+    minimum Size of 2.</p></li></ul>
   actions: []
   rune: ''
   gesture: ''

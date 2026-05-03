@@ -729,14 +729,14 @@ export default class CrucibleBaseActor extends foundry.abstract.TypeDataModel {
     this.parent.callActorHooks("prepareAbilities", this.abilities);
     this.#prepareFinalAbilities();
 
-    // Movement and Size
-    this.parent.callActorHooks("prepareMovement", this.movement);
-    this._prepareFinalMovement();
-
     // Resource pools
     this.#prepareBaseResources();
     this.parent.callActorHooks("prepareResources", this.resources);
     this.#prepareFinalResources();
+
+    // Movement and Size
+    this.parent.callActorHooks("prepareMovement", this.movement);
+    this._prepareFinalMovement();
 
     // Defenses
     this.#preparePhysicalDefenses();

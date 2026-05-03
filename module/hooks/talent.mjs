@@ -940,6 +940,33 @@ HOOKS.surgeweaver00000 = {
 
 /* -------------------------------------------- */
 
+HOOKS.swarm00000000000 = {
+  prepareResources(_item, resources) {
+    resources.health.bonus += resources.health.base;
+  },
+
+  prepareMovement(_item, movement) {
+    const minSize = 2;
+    const fullSize = movement.baseSize + movement.sizeBonus;
+    if ( fullSize <= minSize ) return;
+    const {value, max} = this.resources.health;
+    if ( max <= 0 ) return;
+    const ratio = Math.clamp(value / max, 0, 1);
+    const newSize = Math.round(Math.mix(minSize, fullSize, ratio));
+    movement.sizeBonus = newSize - movement.baseSize;
+  },
+
+  receiveAttack(_item, action, roll) {
+    if ( action.target?.type !== "single" ) return;
+    const dmg = roll.data.damage;
+    if ( !dmg || (dmg.total <= 0) ) return;
+    dmg.resistance += this.abilities.toughness.value;
+    dmg.total = crucible.api.models.CrucibleAction.computeDamage(dmg);
+  }
+};
+
+/* -------------------------------------------- */
+
 HOOKS.testudo000000000 = {
   defendAttack(item, action, _origin, rollData) {
     if ( action.tags.has("strike") && this.statuses.has("guarded") && this.equipment.weapons.shield ) {
