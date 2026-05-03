@@ -1343,7 +1343,7 @@ export default class CrucibleActor extends Actor {
         if ( !label ) continue;
         let color;
         if ( foundry.utils.isPlainObject(cfg.color) ) {
-          color = amount > 0 ? cfg.color.heal : cfg.color.high;
+          color = ((amount > 0) === (cfg.type === "active")) ? cfg.color.heal : cfg.color.high;
           pipColors.add(cfg.color.high.css);
         } else {
           color = cfg.color;
@@ -1460,7 +1460,8 @@ export default class CrucibleActor extends Actor {
 
       // Categorize damage
       for ( let {amount, damageType, resource, restoration} of dot ) {
-        if ( !restoration ) amount = -Math.clamp(amount - this.getResistance(resource, damageType), 0, 2 * amount);
+        if ( !restoration ) amount = Math.clamp(amount - this.getResistance(resource, damageType), 0, 2 * amount);
+        amount *= (restoration ? -1 : 1) * (SYSTEM.RESOURCES[resource]?.type === "reserve" ? 1 : -1);
         turnStartConfig.resourceChanges[resource].push({label: effect.name, amount});
       }
       const status = {text: effect.name, fillColor: SYSTEM.RESOURCES.health.color.high.css};
@@ -2401,6 +2402,25 @@ export default class CrucibleActor extends Actor {
     const currency = Math.max(priorAmount + delta, 0);
     await this.update({system: {currency}});
     return currency - priorAmount;
+  }
+
+  /* -------------------------------------------- */
+
+  /** @override */
+  async toggleStatusEffect(statusId, {active, overlay=false}={}) {
+    const status = CONFIG.statusEffects[statusId];
+    if ( !status ) throw new Error(`Invalid status ID "${statusId}" provided to Actor#toggleStatusEffect`);
+    const ActiveEffect = getDocumentClass("ActiveEffect");
+    const effect = await ActiveEffect.fromStatusEffect(statusId);
+    const existing = this.effects.get(effect.id);
+    if ( existing ) {
+      if ( active ) return true;
+      await existing.delete();
+      return false;
+    }
+    if ( !active && (active !== undefined) ) return;
+    if ( overlay ) effect.updateSource({"flags.core.overlay": true});
+    return ActiveEffect.implementation.create(effect, {parent: this, keepId: true});
   }
 
   /* -------------------------------------------- */
