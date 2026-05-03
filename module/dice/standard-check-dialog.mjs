@@ -360,16 +360,17 @@ export default class StandardCheckDialog extends DialogV2 {
 
   /**
    * Resolve dialog submission to enact a Roll.
-   * When the GM has requested actors, perform a local group check for all actors instead of a single roll.
+   * When the dialog is in group or request mode and has requested actors queued, perform a local group check for
+   * those actors instead of a single roll.
    * @param {Event} _event
    * @param {HTMLButtonElement} _button
    * @param {Dialog} _dialog
-   * @returns {StandardCheck|false}
+   * @returns {StandardCheck|null}
    * @protected
    */
   async _onRoll(_event, _button, _dialog) {
     this.roll.data.messageMode = this.messageMode;
-    if ( this.isGroupCheck && (this.#requestActors.size > 0) ) {
+    if ( (this.isGroupCheck || this.request) && (this.#requestActors.size > 0) ) {
       await this.#rollGroupCheck();
       return null;
     }
