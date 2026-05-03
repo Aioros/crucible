@@ -112,6 +112,7 @@ export default class CrucibleToken extends foundry.documents.TokenDocument {
       || !this.actor?.inCombat                                  // Must have an Actor in combat
       || (movement.method !== "dragging")                       // Must be a drag action
       || movement.chain.length                                  // Must be the first segment
+      || CrucibleToken.#isForcedMovement                        // Forced Movement bypasses AP entirely
       || this._confirmedMovements?.has(movement.id) ) return;   // AP already spent via dialog
 
     // Verify that the movement cost is affordable and either prevent movement or record the total cost
@@ -141,12 +142,23 @@ export default class CrucibleToken extends foundry.documents.TokenDocument {
     }
 
     if ( (movement.method !== "dragging") || movement.chain.length ) return;
+    if ( CrucibleToken.#isForcedMovement ) return;              // Forced Movement skips Move action creation
     if ( this._confirmedMovements?.has(movement.id) ) {         // AP already spent via dialog
       this._confirmedMovements.delete(movement.id);
       return;
     }
     const costFeet = movement.passed.cost + movement.pending.cost;
     this.actor.useMove(costFeet, {dialog: false, movement});
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Is the GM's "Forced Movement" scene controls toggle currently active?
+   * @type {boolean}
+   */
+  static get #isForcedMovement() {
+    return game.user.isGM && !!ui.controls.controls.tokens?.tools?.forcedMovement?.active;
   }
 
   /* -------------------------------------------- */

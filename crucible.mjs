@@ -708,21 +708,31 @@ Hooks.on("renderChatMessageHTML", documents.CrucibleChatMessage.onRenderHTML);
 Hooks.on("targetToken", dice.ActionUseDialog.debounceChangeTarget);
 Hooks.on("preDeleteChatMessage", models.CrucibleAction.onDeleteChatMessage);
 Hooks.on("getSceneControlButtons", controls => {
-  const flankingTool = {
+  controls.tokens.tools.forcedMovement = {
+    name: "forcedMovement",
+    order: 5,
+    title: "CONTROLS.CrucibleForcedMovement",
+    icon: "fa-solid fa-wind",
+    toggle: true,
+    active: false,
+    visible: game.user.isGM
+  };
+
+  controls.tokens.tools.debugFlanking = {
     name: "debugFlanking",
+    order: 6,
     title: "CONTROLS.VisualizeFlanking",
     icon: "fa-solid fa-circles-overlap",
     toggle: true,
-    active: false
-  };
-  flankingTool.onChange = (_event, active) => {
-    CONFIG.debug.flanking = active;
-    for ( const token of globalThis.canvas.tokens.controlled ) {
-      if ( active ) token._visualizeEngagement(token.engagement);
-      else token._clearEngagementVisualization();
+    active: false,
+    onChange: (_event, active) => {
+      CONFIG.debug.flanking = active;
+      for ( const token of globalThis.canvas.tokens.controlled ) {
+        if ( active ) token._visualizeEngagement(token.engagement);
+        else token._clearEngagementVisualization();
+      }
     }
   };
-  controls.tokens.tools.debugFlanking = flankingTool;
 });
 Hooks.on("renderCombatTracker", models.CrucibleCombatChallenge.onRenderCombatTracker);
 
