@@ -101,6 +101,13 @@ export default class CrucibleToken extends foundry.documents.TokenDocument {
   /** @inheritDoc */
   async _preUpdateMovement(movement, operation) {
     await super._preUpdateMovement(movement, operation);
+
+    // Capture the movementId being undone so _onUpdateMovement can refund AP and free movement allowance
+    if ( movement.method === "undo" ) {
+      operation._crucibleUndoneMovementId = this._source._movementHistory.at(-1)?.movementId;
+      return;
+    }
+
     if ( !this.parent?.useMicrogrid                             // Must be a crucible 1ft grid scene
       || !this.actor?.inCombat                                  // Must have an Actor in combat
       || (movement.method !== "dragging")                       // Must be a drag action
@@ -124,14 +131,38 @@ export default class CrucibleToken extends foundry.documents.TokenDocument {
     super._onUpdateMovement(movement, operation, user);
     if ( !user.isSelf                                           // Must be the user who initiated movement
       || !this.parent?.useMicrogrid                             // Must be a crucible 1ft grid scene
-      || !this.actor?.inCombat                                  // Must have an Actor in combat
-      || (movement.method !== "dragging")                       // Must be a drag action
-      || movement.chain.length ) return;                        // Must be the first segment
+      || !this.actor?.inCombat ) return;                        // Must have an Actor in combat
+
+    // Revert the corresponding movement action when a movement is undone
+    if ( movement.method === "undo" ) {
+      const undoneId = operation._crucibleUndoneMovementId;
+      if ( undoneId ) this.#revertUndoneMovement(undoneId);
+      return;
+    }
+
+    if ( (movement.method !== "dragging") || movement.chain.length ) return;
     if ( this._confirmedMovements?.has(movement.id) ) {         // AP already spent via dialog
       this._confirmedMovements.delete(movement.id);
       return;
     }
     const costFeet = movement.passed.cost + movement.pending.cost;
     this.actor.useMove(costFeet, {dialog: false, movement});
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Roll back a confirmed action when a movement is undone via CTRL+Z.
+   * If the Action was confirmed, revert it.
+   * Delete the generated Move chat message.
+   * @param {string} movementId     The id of the movement being undone
+   */
+  async #revertUndoneMovement(movementId) {
+    const message = game.messages.contents.findLast(m => m.flags?.crucible?.movement === movementId);
+    if ( !message ) return;
+    if ( message.flags.crucible?.confirmed ) {
+      await crucible.api.models.CrucibleAction.confirmMessage(message, {reverse: true});
+    }
+    await message.delete();
   }
 }
