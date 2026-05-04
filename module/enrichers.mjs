@@ -486,27 +486,33 @@ async function onClickMilestone(event) {
  * @param {RegExpMatchArray} matchArray
  */
 function enrichHazard([_match, terms, name]) {
-  const [hazard, ...tags] = terms.split(" ");
-  const action = crucible.api.models.CrucibleAction.createHazard(undefined, {hazard: Number(hazard), tags});
+  const [danger, ...tags] = terms.split(" ");
+
+  // Build a temporary Action that resolves tags into hazard attributes
+  const action = crucible.api.models.CrucibleAction.createHazard({danger: Number(danger), tags});
+  action.prepare();
+  const {damageType, defenseType, resource} = action.usage;
 
   // Prepare label
-  const hazardRank = `Hazard ${hazard}`;
+  const hazardRank = `Hazard ${danger}`;
   const parenthetical = name ? [hazardRank] : [];
   for ( const t of tags ) {
     const cfg = SYSTEM.ACTION.TAGS[t];
-    if ( cfg && cfg.label && !cfg.internal ) parenthetical.push(cfg.label);
+    if ( cfg && cfg.label && !cfg.internal ) parenthetical.push(_loc(cfg.label));
   }
   let label = name || hazardRank;
   if ( parenthetical.length ) label += ` (${parenthetical.join(", ")})`;
 
   // Prepare tooltip
-  const tooltip = `${hazardRank} vs. ${SYSTEM.DEFENSES[action.usage.defenseType]?.label} dealing
-  ${SYSTEM.DAMAGE_TYPES[action.usage.damageType]?.label} damage to ${SYSTEM.RESOURCES[action.usage.resource]?.label}`;
+  const tooltip = `${hazardRank} vs. ${_loc(SYSTEM.DEFENSES[defenseType]?.label)} dealing
+  ${_loc(SYSTEM.DAMAGE_TYPES[damageType]?.label) || ""} damage to ${_loc(SYSTEM.RESOURCES[resource]?.label)}`;
 
   // Return the enriched content tag
   const tag = document.createElement("enriched-content");
   tag.classList.add("hazard-check");
-  Object.assign(tag.dataset, {hazard, tags, tooltip});
+  Object.assign(tag.dataset, {danger, tags, defenseType, resource, tooltip});
+  if ( damageType ) tag.dataset.damageType = damageType;
+  if ( name ) tag.dataset.hazardName = name;
   tag.innerHTML = label;
   return tag;
 }
@@ -529,23 +535,16 @@ function renderHazard(element) {
  */
 async function onClickHazard(event) {
   event.preventDefault();
-  const element = event.target;
-  const {hazard, tags} = element.dataset;
-
-  // Select a target
-  const actor = inferEnricherActor();
-  const targets = actor ? [actor] : (await chooseActorsDialog());
-
-  // Iterate over actor targets
-  for ( const actor of targets ) {
-    const action = crucible.api.models.CrucibleAction.createHazard(actor, {
-      name: element.innerText,
-      hazard: Number(hazard),
-      tags: tags.split(",")
-    });
-    // noinspection ES6MissingAwait
-    action.use();
-  }
+  if ( !game.user.isGM ) return;
+  const {danger, tags, damageType, defenseType, resource, hazardName} = event.target.dataset;
+  return crucible.api.dice.HazardDialog.prompt({
+    danger: Number(danger),
+    tags: tags ? tags.split(",") : [],
+    damageType: damageType || "void",
+    defenseType: defenseType || "physical",
+    resource: resource || undefined,
+    name: hazardName || event.target.innerText
+  });
 }
 
 /* -------------------------------------------- */

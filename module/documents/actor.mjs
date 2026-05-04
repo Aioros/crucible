@@ -721,7 +721,7 @@ export default class CrucibleActor extends Actor {
    * @returns {Promise<CrucibleAction>}
    */
   async hazardAttack(hazardData) {
-    const action = CrucibleAction.createHazard(this, hazardData);
+    const action = CrucibleAction.createHazard({...hazardData, actor: this});
     return action.use();
   }
 

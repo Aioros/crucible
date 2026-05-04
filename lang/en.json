@@ -1481,6 +1481,30 @@
       "RestRecoverIncapacitated": "You may not Rest or Recover while Dead or Insane."
     }
   },
+  "HAZARD": {
+    "Hazard": "Hazard",
+    "UseHazard": "Use Hazard",
+    "WindowTitle": "Hazard: {name}",
+    "CONFIG": {
+      "Title": "Hazard Configuration",
+      "Name": "Name",
+      "Danger": "Danger Level",
+      "Defense": "Target Defense",
+      "Damage": "Damage Type",
+      "Tags": "Action Tags"
+    },
+    "TARGETS": {
+      "Title": "Affected Targets",
+      "Hint": "Drop tokens or actors here, or click the party button to add party members.",
+      "Add": "Add Target",
+      "Remove": "Remove Target",
+      "Clear": "Clear All",
+      "Party": "Add Party"
+    },
+    "WARNINGS": {
+      "GMOnly": "Only the GM can configure and roll hazards."
+    }
+  },
   "ITEM": {
     "ACTIONS": {
       "Create": "Create Item",

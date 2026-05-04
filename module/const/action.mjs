@@ -863,8 +863,10 @@ export const TAGS = {
     priority: 0,
     internal: true,
     initialize() {
-      Object.assign(this.usage, {hasDice: true, defenseType: "physical", resource: "health"});
-      this.usage.bonuses.ability = this.usage.hazard;
+      this.usage.hasDice = true;
+      this.usage.resource ??= "health";
+      this.usage.defenseType ??= "physical";
+      this.usage.bonuses.ability = this.usage.danger;
       this.usage.bonuses.base = 1;
     },
     async roll(target) {
@@ -1241,7 +1243,7 @@ for ( const {id, label} of Object.values(DAMAGE_TYPES) ) {
     label: label,
     category: "damage",
     initialize() {
-      this.usage.damageType = id;
+      this.usage.damageType ??= id;
     }
   };
 }

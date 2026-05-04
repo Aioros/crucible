@@ -1256,9 +1256,11 @@ export default class CrucibleAction extends foundry.abstract.DataModel {
       messageMode: this.usage.messageMode || game.settings.get("core", "messageMode")
     });
 
-    // Persist action usage flags immediately rather than waiting for action confirmation
-    this.#recordActionHistory(message);
-    await this.actor.update({"flags.crucible": this.usage.actorFlags});
+    // Persist action usage flags immediately rather than waiting for action confirmation - skip for transient actors
+    if ( game.actors.has(this.actor.id) ) {
+      this.#recordActionHistory(message);
+      await this.actor.update({"flags.crucible": this.usage.actorFlags});
+    }
     return this;
   }
 
@@ -1303,6 +1305,12 @@ export default class CrucibleAction extends foundry.abstract.DataModel {
    * @returns {CrucibleActionTargets}
    */
   acquireTargets({strict=true}={}) {
+    if ( this.usage.forcedTargets?.length ) {
+      return this.targets = new Map(this.usage.forcedTargets.map(actor => {
+        const token = actor.getActiveTokens?.(true, true)[0] ?? null;
+        return [actor, {actor, uuid: actor.uuid, name: actor.name, token}];
+      }));
+    }
     let targets;
     let targetType = this.target.type;
     const targetCfg = SYSTEM.ACTION.TARGET_TYPES[targetType];
@@ -2247,8 +2255,9 @@ export default class CrucibleAction extends foundry.abstract.DataModel {
       if ( event.statusText ) batch.statusText.push(...event.statusText);
     }
 
-    // Apply each actor's batch
+    // Apply each actor's batch - skip non-persisted actors (e.g. the transient Environment actor used by hazards)
     for ( const [actor, batch] of batches ) {
+      if ( !game.actors.has(actor.id) ) continue;
       if ( reverse && batch.itemSnapshots.length ) this.#reverseItemSnapshots(batch);
       const statusText = batch.statusText.length ? batch.statusText : undefined;
       await actor.alterResources(batch.resources, batch.actorUpdates, {reverse, statusText});
@@ -2667,8 +2676,12 @@ export default class CrucibleAction extends foundry.abstract.DataModel {
     } = message.flags.crucible || {};
     if ( !actionData ) throw new Error(`ChatMessage ${message.id} does not contain CrucibleAction data`);
 
-    // Reference linked documents
-    const actor = fromUuidSync(actorUuid) || ChatMessage.getSpeakerActor(message.speaker);
+    // Reference linked documents - hazards use a transient Environment actor that cannot resolve from UUID,
+    // so fabricate a fresh placeholder when reconstituting one from chat
+    let actor = fromUuidSync(actorUuid) || ChatMessage.getSpeakerActor(message.speaker);
+    if ( !actor && actionData.tags?.includes("hazard") ) {
+      actor = new Actor.implementation({name: "Environment", type: "adversary"});
+    }
     const item = fromUuidSync(itemUuid);
     const token = fromUuidSync(tokenUuid);
     const region = fromUuidSync(regionUuid);
@@ -2748,26 +2761,29 @@ export default class CrucibleAction extends foundry.abstract.DataModel {
 
   /**
    * Create an environmental hazard action.
-   * @param {CrucibleActor} actor
-   * @param {object} [options={}]
-   * @param {object} [options.actionData]
-   * @param {string[]} [options.tags]
-   * @param {number} [options.hazard=0]
-   * @returns {CrucibleAction}
+   * @param {object} [options={}]           Options which modify hazard creation
+   * @param {CrucibleActor} [options.actor]   A particular Actor responsible for the hazard.
+   * @param {number} [options.danger=0]       The hazard's danger level (drives the attack roll's ability bonus).
+   * @param {string[]} [options.tags]         Tag identifiers applied to the hazard action.
+   * @param {string} [options.defenseType]    The defense the hazard targets (defaults to "physical").
+   * @param {string} [options.damageType]     The damage type inflicted by the hazard.
+   * @param {string} [options.resource]       The resource the hazard damages (defaults to "health").
+   * @param {string} [options.name]           A custom display name for the hazard.
+   * @returns {CrucibleAction}              The resulting CrucibleAction that provides the configured hazard
    */
-  static createHazard(actor, {hazard=0, tags, ...actionData}={}) {
+  static createHazard({actor, danger=0, tags, defenseType, damageType, resource, name, ...actionData}={}) {
     actor ||= new Actor.implementation({name: "Environment", type: "adversary"});
-    tags = Array.isArray(tags) ? tags : [];
+    tags = Array.isArray(tags) ? tags.filter(t => t !== "hazard") : [];
     tags.unshift("hazard");
     return new this({
       id: "environmentAttack",
-      name: "Environmental Hazard",
+      name: name || "Environmental Hazard",
       img: "icons/skills/wounds/injury-body-pain-gray.webp",
       description: "",
       target: {type: "single", scope: 4, self: true},
       ...actionData,
       tags
-    }, {actor, usage: {hazard}});
+    }, {actor, usage: {danger, defenseType, damageType, resource}});
   }
 
   /* -------------------------------------------- */
